@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2008-2014 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
@@ -14,6 +14,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
+#include <pthread.h>
 
 #include <aerospike/as_module.h>
 #include <aerospike/as_util.h>
@@ -75,4 +77,35 @@ int as_module_apply_record(as_module * m, as_udf_context *ctx, const char * file
  */
 int as_module_apply_stream(as_module * m, as_udf_context * ctx, const char * filename, const char * function, as_stream * istream, as_list * args, as_stream * ostream, as_result *res) {
     return as_util_hook(apply_stream, 1, m, ctx, filename, function, istream, args, ostream, res);
+}
+
+/**
+ * Obtain a read lock on the module.
+ */
+int as_module_rdlock(as_module * m) {
+	if ( m && m->lock ) {
+		return pthread_rwlock_rdlock(m->lock);
+	}
+	return 1;
+}
+
+/**
+ * Obtain a write lock on the module.
+ */
+int as_module_wrlock(as_module * m) {
+	if ( m && m->lock ) {
+		return pthread_rwlock_wrlock(m->lock);
+	}
+	return 1;
+}
+
+
+/**
+ * Release lock on the module.
+ */
+int as_module_unlock(as_module * m) {
+	if ( m && m->lock ) {
+		return pthread_rwlock_unlock(m->lock);
+	}
+	return 1;
 }

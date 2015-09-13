@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2008-2015 Aerospike, Inc.
  *
  * Portions may be licensed to Aerospike, Inc. under one or more contributor
@@ -70,7 +70,7 @@ typedef struct as_module_error_s {
 } as_module_error;
 
 /**
- * Module Interface 
+ * Module Interface
  * Provide functions which interface with a module.
  */
 typedef struct as_module_hooks_s {
@@ -111,8 +111,9 @@ typedef struct as_module_hooks_s {
  * @field hooks contains functions that can be applied to the module.
  */
 typedef struct as_module_s {
-    const void *            source;
-    const as_module_hooks * hooks;
+    const void *             source;
+    const as_module_hooks *  hooks;
+    const pthread_rwlock_t * lock;
 } as_module;
 
 
@@ -139,7 +140,7 @@ void * as_module_source(as_module * m);
 int as_module_destroy(as_module * m);
 
 /**
- * Module Configurator. 
+ * Module Configurator.
  * This configures and reconfigures the module. This can be called an
  * arbitrary number of times during the lifetime of the server.
  *
@@ -181,7 +182,7 @@ int as_module_validate(as_module * m, as_aerospike * as, const char * filename, 
  * @param filename		The name of the udf module containing the function to be executed.
  * @param function		The name of the udf function to be executed.
  * @param r 			record to apply to the function.
- * @param args 			list of arguments for the function represented as vals 
+ * @param args 			list of arguments for the function represented as vals
  * @param result 		pointer to a val that will be populated with the result.
  *
  * @return 0 on success, otherwise 1
@@ -198,13 +199,40 @@ int as_module_apply_record(as_module * m, as_udf_context * ctx, const char * fil
  * @param filename		The name of the udf module containing the function to be executed.
  * @param function		The name of the udf function to be executed.
  * @param istream 		pointer to a readable stream, that will provides values.
- * @param args 			list of arguments for the function represented as vals 
+ * @param args 			list of arguments for the function represented as vals
  * @param ostream 		pointer to a writable stream, that will be populated with results.
  * @param result 		pointer to a val that will be populated with the result.
  *
  * @return 0 on success, otherwise 1
  */
 int as_module_apply_stream(as_module * m, as_udf_context * ctx, const char * filename, const char * function, as_stream * istream, as_list * args, as_stream * ostream, as_result *res);
+
+/**
+ * Obtain a read lock on the module.
+ *
+ * @param m 			Module from which the lock will be used.
+ *
+ * @return 0 on success, otherwise 1
+ */
+int as_module_rdlock(as_module * m);
+
+/**
+ * Obtain a write lock on the module.
+ *
+ * @param m 			Module from which the lock will be used.
+ *
+ * @return 0 on success, otherwise 1
+ */
+int as_module_wrlock(as_module * m);
+
+/**
+ * Release a lock on the module.
+ *
+ * @param m 			Module from which the lock will be used.
+ *
+ * @return 0 on success, otherwise 1
+ */
+int as_module_unlock(as_module * m);
 
 /**
  * Return lua error in string format when error code is passed in
